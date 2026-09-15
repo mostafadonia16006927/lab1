@@ -14,12 +14,24 @@ const today = new Date().toLocaleDateString(undefined, {
 export default function App() {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    fetchTodos()
-      .then(data => { setTodos(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
-  }, []);
+    const load = async () => {
+      try {
+        let done;
+        if (filter === 'done') done = 'true';
+        else if (filter === 'active') done = 'false';
+        const data = await fetchTodos(done);
+        setTodos(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [filter]);
 
   const handleAdd = async (title) => {
     const newTodo = await createTodo(title);
@@ -41,15 +53,19 @@ export default function App() {
     setTodos(todos.filter(t => t._id !== id));
   };
 
-  return (
-    <div className="receipt-page">
+ return(
+   <div className="receipt-page">
       <div className="receipt">
-        <header className="receipt-header">
-          <span className="stamp">Tasks</span>
-          <p className="receipt-date">{today}</p>
-        </header>
+        <header className="receipt-header">...</header>
 
         <TodoForm onAdd={handleAdd} />
+
+        <div className="filters">
+          <button onClick={() => setFilter('all')}    className={filter === 'all' ? 'active' : ''}>All</button>
+          <button onClick={() => setFilter('active')} className={filter === 'active' ? 'active' : ''}>Active</button>
+          <button onClick={() => setFilter('done')}   className={filter === 'done' ? 'active' : ''}>Done</button>
+        </div>
+
         <TodoList
           todos={todos}
           loading={loading}
